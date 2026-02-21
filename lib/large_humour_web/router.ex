@@ -17,12 +17,17 @@ defmodule LargeHumourWeb.Router do
   scope "/", LargeHumourWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-
+    live "/gen", GenerateLive
+    
     live "/jokes", JokeLive.Index, :index
     live "/jokes/new", JokeLive.Form, :new
     live "/jokes/:id", JokeLive.Show, :show
     live "/jokes/:id/edit", JokeLive.Form, :edit
+
+    live "/prompts", PromptLive.Index, :index
+    live "/prompts/new", PromptLive.Form, :new
+    live "/prompts/:id", PromptLive.Show, :show
+    live "/prompts/:id/edit", PromptLive.Form, :edit
   end
 
   # Other scopes may use custom stacks.
