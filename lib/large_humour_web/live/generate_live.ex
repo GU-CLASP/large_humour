@@ -31,10 +31,17 @@ defmodule LargeHumourWeb.GenerateLive do
           type="select"
           label="Model"
           value="groq:openai/gpt-oss-120b"
-          options={Application.fetch_env!(:large_humour, :req_llms) |> Enum.map(fn x -> {x,x} end)}
+          options={Application.fetch_env!(:large_humour, :req_llms) |> Enum.map(fn x -> {x, x} end)}
         />
         <footer>
-          <.button phx-disable-with="Generating..." variant="primary">Generate Jokes!</.button>
+          <.button
+            phx-disable-with="Generating..."
+            variant="primary"
+            type="submit"
+            disabled={@loading}
+          >
+            {if @loading, do: "Generating...", else: "Generate!"}
+          </.button>
         </footer>
       </.form>
 
@@ -55,16 +62,24 @@ defmodule LargeHumourWeb.GenerateLive do
         %{"prompt_id" => prompt_id, "joke_id" => joke_id, "model_name" => model},
         socket
       ) do
-    jokes =
-      LLM.generate_jokes(Jokes.get_joke!(joke_id), %LLM{
-        model: model,
-        base_prompt: Prompts.get_prompt!(prompt_id).body
-      })
-
     {:noreply,
      socket
+     |> assign(:loading, true)
+     |> start_async(:process_form, fn ->
+       LLM.generate_jokes(Jokes.get_joke!(joke_id), %LLM{
+         model: model,
+         base_prompt: Prompts.get_prompt!(prompt_id).body
+       })
+     end)}
+  end
+
+  @impl true
+  def handle_async(:process_form, {:ok, result}, socket) do
+    {:noreply,
+     socket
+     |> assign(:loading, false)
      |> stream(:new_jokes, [], reset: true)
-     |> stream(:new_jokes, jokes)}
+     |> stream(:new_jokes, result)}
   end
 
   @impl true
@@ -75,6 +90,7 @@ defmodule LargeHumourWeb.GenerateLive do
      |> assign(:prompts, Prompts.list_prompts())
      |> assign(:seed, %{})
      |> assign(:jokes, list_jokes())
+     |> assign(:loading, false)
      |> stream_configure(:new_jokes,
        dom_id: &"joke-#{Ecto.UUID.generate()}-#{&1.source_joke_id}"
      )

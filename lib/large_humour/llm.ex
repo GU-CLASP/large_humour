@@ -5,7 +5,7 @@ defmodule LargeHumour.LLM do
 
   alias LargeHumour.Jokes.Joke
   alias LargeHumour.LLM
-  
+
   def generate_similar(joke, %LLM{} = llm) do
     jokes_json =
       Zoi.object(jokes: Zoi.array(Zoi.string()))
@@ -41,7 +41,7 @@ defmodule LargeHumour.LLM do
   end
 
   def generate_jokes!(%Joke{} = joke, %LLM{} = llm) do
-    generate_jokes(joke,llm)
+    generate_jokes(joke, llm)
     |> Enum.map(fn attrs -> LargeHumour.Jokes.create_joke(attrs) end)
   end
 end
