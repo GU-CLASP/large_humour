@@ -30,6 +30,7 @@ const liveSocket = new LiveSocket("/largehumour/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {...colocatedHooks},
+  timeout: 60000
 })
 
 // Show progress bar on live navigation and form submits
