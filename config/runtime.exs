@@ -20,6 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :large_humour, LargeHumourWeb.Endpoint, server: true
 end
 
+config :large_humour,
+  req_llms: System.get_env("REQ_LLMS", "groq:openai/gpt-oss-120b") |> String.split(";")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
