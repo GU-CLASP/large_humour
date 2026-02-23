@@ -9,7 +9,10 @@ import Config
 
 config :large_humour,
   ecto_repos: [LargeHumour.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  req_llms: System.get_env("REQ_LLMS", "groq:openai/gpt-oss-120b") |> String.split(";")
+ 
+
 
 # Configures the endpoint
 config :large_humour, LargeHumourWeb.Endpoint,

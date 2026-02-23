@@ -31,7 +31,7 @@ defmodule LargeHumourWeb.GenerateLive do
           type="select"
           label="Model"
           value="groq:openai/gpt-oss-120b"
-          options={[{"groq:openai/gpt-oss-120b", "groq:openai/gpt-oss-120b"}]}
+          options={Application.fetch_env!(:large_humour, :req_llms) |> Enum.map(fn x -> {x,x} end)}
         />
         <footer>
           <.button phx-disable-with="Generating..." variant="primary">Generate Jokes!</.button>
