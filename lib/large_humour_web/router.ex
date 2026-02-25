@@ -28,6 +28,13 @@ defmodule LargeHumourWeb.Router do
     live "/prompts/new", PromptLive.Form, :new
     live "/prompts/:id", PromptLive.Show, :show
     live "/prompts/:id/edit", PromptLive.Form, :edit
+
+    live "/ratings",RatingLive.Index, :index
+    live "/ratings/new", RatingLive.Form, :new
+    live "/ratings/:id", RatingLive.Show, :show
+    live "/ratings/:id/edit", RatingLive.Form, :edit
+
+    
   end
 
   # Other scopes may use custom stacks.

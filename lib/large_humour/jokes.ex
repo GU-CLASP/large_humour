@@ -7,6 +7,7 @@ defmodule LargeHumour.Jokes do
   alias LargeHumour.Repo
 
   alias LargeHumour.Jokes.Joke
+  alias LargeHumour.Ratings.Rating
 
   @doc """
   Returns the list of jokes.
@@ -19,6 +20,28 @@ defmodule LargeHumour.Jokes do
   """
   def list_jokes do
     Repo.all(Joke)
+  end
+
+  @doc """
+  Returns the list of jokes.
+
+  ## Examples
+
+      iex> list_jokes()
+      [%Joke{}, ...]
+
+  """
+  def list_jokes_asc_rating(limit) do
+    query =
+      from j in Joke,
+        left_join: r in Rating,
+        on: j.id == r.joke_id,
+        group_by: j.id,
+        select: j.id,
+        order_by: count(r.rating),
+        limit: ^limit
+
+    Repo.all(query)
   end
 
   @doc """

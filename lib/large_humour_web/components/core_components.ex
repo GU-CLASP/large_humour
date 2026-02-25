@@ -334,7 +334,7 @@ defmodule LargeHumourWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
+    <table class="table-sm table-zebra">
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
