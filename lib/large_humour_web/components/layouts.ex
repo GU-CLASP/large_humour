@@ -50,12 +50,13 @@ defmodule LargeHumourWeb.Layouts do
             <.link navigate={~p"/prompts"} class="btn">Prompts</.link>
           </li>
           <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <.link navigate={~p"/gen"} class="btn btn-primary">
-              Generate <span aria-hidden="true">&rarr;</span>
+            <.link navigate={~p"/gen"} class="btn btn-accent">
+              Generate Jokes
             </.link>
+          </li>
+
+          <li>
+            <.theme_toggle />
           </li>
         </ul>
       </div>

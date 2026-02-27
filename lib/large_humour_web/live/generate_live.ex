@@ -1,6 +1,8 @@
 defmodule LargeHumourWeb.GenerateLive do
+  require Logger
   use LargeHumourWeb, :live_view
   alias LargeHumour.Jokes
+  alias LargeHumour.Jokes.Joke
   alias LargeHumour.Prompts
   alias LargeHumour.LLM
 
@@ -44,7 +46,6 @@ defmodule LargeHumourWeb.GenerateLive do
           </.button>
         </footer>
       </.form>
-
       <.table
         :if={@streams}
         id="new_jokes"
@@ -52,6 +53,9 @@ defmodule LargeHumourWeb.GenerateLive do
       >
         <:col :let={{_id, joke}}>{joke.text}</:col>
       </.table>
+      <.form :if={@new_jokes_count > 0} id="save-form" phx-submit="save">
+        <.button variant="primary" type="submit">Save</.button>
+      </.form>
     </Layouts.app>
     """
   end
@@ -66,11 +70,26 @@ defmodule LargeHumourWeb.GenerateLive do
      socket
      |> assign(:loading, true)
      |> start_async(:process_form, fn ->
-       LLM.generate_jokes(Jokes.get_joke!(joke_id), %LLM{
-         model: model,
-         base_prompt: Prompts.get_prompt!(prompt_id).body
-       })
+       LLM.generate_jokes(
+         Jokes.get_joke!(joke_id),
+         %LLM{
+           model: model,
+           base_prompt: Prompts.get_prompt!(prompt_id).body
+         },
+         prompt_id
+       )
      end)}
+  end
+
+  @impl true
+  def handle_event("save", _, socket) do
+    jokes = socket.assigns.new_jokes
+    Enum.map(jokes, fn j -> Jokes.create_joke(j) end)
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Generated jokes saved successfully")
+     |> push_navigate(to: ~p"/gen")}
   end
 
   @impl true
@@ -78,6 +97,8 @@ defmodule LargeHumourWeb.GenerateLive do
     {:noreply,
      socket
      |> assign(:loading, false)
+     |> assign(:new_jokes_count, length(result))
+     |> assign(:new_jokes, result)
      |> stream(:new_jokes, [], reset: true)
      |> stream(:new_jokes, result)}
   end
@@ -91,6 +112,7 @@ defmodule LargeHumourWeb.GenerateLive do
      |> assign(:seed, %{})
      |> assign(:jokes, list_jokes())
      |> assign(:loading, false)
+     |> assign(:new_jokes_count, 0)
      |> stream_configure(:new_jokes,
        dom_id: &"joke-#{Ecto.UUID.generate()}-#{&1.source_joke_id}"
      )

@@ -1,4 +1,5 @@
 defmodule LargeHumour.LLM do
+  @derive {Jason.Encoder, only: [:model, :system_prompt, :base_prompt]}
   defstruct model: "groq:openai/gpt-oss-120b",
             system_prompt: "You are an expert on humour.",
             base_prompt: "Tell 10 jokes similar to this joke:"
@@ -24,15 +25,14 @@ defmodule LargeHumour.LLM do
     )
   end
 
-  def generate_jokes(%Joke{} = joke, %LLM{} = llm) do
+  def generate_jokes(%Joke{} = joke, %LLM{} = llm, prompt_id \\ 0) do
     %{"jokes" => jokes} = generate_similar(joke.text, llm)
 
     jokes
     |> Enum.map(fn j ->
       %{
         source_joke_id: joke.id,
-        code: llm.model,
-        # code: "gpt-oss-120b_basic",
+        code: llm.model <> "_" <> prompt_id,
         text: j,
         seed: false,
         llm_meta: llm
@@ -40,8 +40,8 @@ defmodule LargeHumour.LLM do
     end)
   end
 
-  def generate_jokes!(%Joke{} = joke, %LLM{} = llm) do
-    generate_jokes(joke, llm)
+  def generate_jokes!(%Joke{} = joke, %LLM{} = llm, prompt_id \\ 0) do
+    generate_jokes(joke, llm, prompt_id)
     |> Enum.map(fn attrs -> LargeHumour.Jokes.create_joke(attrs) end)
   end
 end
