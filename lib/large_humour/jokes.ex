@@ -8,6 +8,7 @@ defmodule LargeHumour.Jokes do
 
   alias LargeHumour.Jokes.Joke
   alias LargeHumour.Ratings.Rating
+  alias LargeHumour.Tasks.Task
 
   @doc """
   Returns the list of jokes.
@@ -22,15 +23,41 @@ defmodule LargeHumour.Jokes do
     Repo.all(Joke)
   end
 
-  @doc """
-  Returns the list of jokes.
+  def get_untasked_seed() do
+    list_jokes(1, true, true)
+  end
 
-  ## Examples
+  def list_jokes(limit, seeds \\ true, exclude_source_id \\ nil) do
+    where1 =
+      case {seeds, exclude_source_id} do
+        {true, _} ->
+          dynamic([j], is_nil(j.source_joke_id))
 
-      iex> list_jokes()
-      [%Joke{}, ...]
+        {false, nil} ->
+          dynamic([j], not is_nil(j.source_joke_id))
 
-  """
+        {false, s_id} ->
+          dynamic([j], not is_nil(j.source_joke_id) and j.source_joke_id != ^s_id)
+      end
+
+    query =
+      from j in Joke,
+        as: :joke,
+        left_join: r in Rating,
+        on: j.id == r.joke_id,
+        left_join: t in Task,
+        on: j.id == t.joke_id,
+        group_by: [j.id],
+        select: j.id,
+        distinct: j.source_joke_id,
+        where: ^where1,
+        # where: ^where2,
+        order_by: [count(t.joke_id), count(r.rating)],
+        limit: ^limit
+
+    Repo.all(query)
+  end
+
   def list_jokes_asc_rating(limit) do
     query =
       from j in Joke,

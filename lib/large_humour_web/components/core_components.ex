@@ -185,17 +185,17 @@ defmodule LargeHumourWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="fieldset mb-2 peer">
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-        <span class="label">
+        <span class="label text-base-content">
           <input
             type="checkbox"
             id={@id}
             name={@name}
             value="true"
             checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
+            class={@class || "checkbox"}
             {@rest}
           />{@label}
         </span>
@@ -334,7 +334,7 @@ defmodule LargeHumourWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table-sm table-zebra">
+    <table class="table-sm table-zebra text-base-content">
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>

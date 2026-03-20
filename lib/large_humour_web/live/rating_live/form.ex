@@ -1,10 +1,12 @@
 defmodule LargeHumourWeb.RatingLive.Form do
   use LargeHumourWeb, :live_view
+  require Logger
 
   alias LargeHumour.Ratings
-  alias LargeHumour.Jokes
   alias LargeHumour.Ratings.Rating
-
+  alias LargeHumour.Jokes
+  alias LargeHumour.Tasks
+  
   defp rating_schema do
     [
       %{
@@ -42,18 +44,6 @@ defmodule LargeHumourWeb.RatingLive.Form do
         title: "Super funny",
         description:
           "Extended laughter / the joke was ingeniously hilarious / “rolling on the ground” laughing"
-      },
-      %{
-        digit: "y",
-        title: "(optional)",
-        description:
-          "If the joke succeeds in amusing you, and seemed like a joke, but has any aspect(s) that do not make sense or are out of place, even in a joke."
-      },
-      %{
-        digit: "z",
-        title: "(optional)",
-        description:
-          "If the text is funny only because it failed so badly that it is funny (effectively it’s not a joke) (rate anyways)"
       }
     ]
   end
@@ -67,21 +57,65 @@ defmodule LargeHumourWeb.RatingLive.Form do
       </.header>
 
       <.form for={@form} id="rating-form" phx-change="validate" phx-submit="save">
-        <p>{@joke.text}</p>
+        <div class="card shadow-sm bg-base-200"><div class="card-body"><p>{@joke.text}</p></div></div>
         <.input field={@form[:joke_id]} type="text" label="" value={@joke.id} hidden />
-        <.input
-          field={@form[:rating]}
-          type="text"
-          label="Rating (number+optional letter): "
-          class="input w-16"
-        />
+        <div class="w-full">
+          <.input
+            field={@form[:rating]}
+            type="range"
+            min="0"
+            max="6"
+            value="0"
+            class="range w-full"
+            step="1"
+          />
+          <div class="flex justify-between px-2.5 mt-2 text-xs">
+            <%= for r <- rating_schema() do %>
+              <div
+                class="tooltip tooltip-bottom"
+                data-tip={r.description}
+              >
+                <span>{r.digit}</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        <.table id="users" rows={rating_schema()}>
+          <:col :let={r} label="" class="text-base-content/70">{r.digit}</:col>
+          <:col :let={r} label="">{r.title}</:col>
+          <:col :let={r} label="">{r.description}</:col>
+        </.table>
+
+        <fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4 mt-3 mb-3">
+          <legend class="fieldset-legend">Additional questions:</legend>
+          <div>
+            <.input
+              name="y"
+              type="checkbox"
+              label="Some aspects do not make sense or are out of place, even for a joke."
+            />
+            <div class="not-peer-has-checked:hidden">
+              <.input
+                field={@form[:weird_aspects]}
+                type="text"
+                placeholder="Specify which aspects..."
+                class="input w-full"
+              />
+            </div>
+          </div>
+          <.input
+            field={@form[:failed]}
+            type="checkbox"
+            label="It is funny only because it failed so badly that it is funny (effectively it’s not a joke)"
+          />
+          <.input
+            field={@form[:offensive]}
+            type="checkbox"
+            label="I find this joke offensive"
+          />
+        </fieldset>
         <.button phx-disable-with="Saving..." variant="primary">Submit rating</.button>
       </.form>
-      <.table id="users" rows={rating_schema()}>
-        <:col :let={r} label="">{r.digit}</:col>
-        <:col :let={r} label="">{r.title}</:col>
-        <:col :let={r} label="">{r.description}</:col>
-      </.table>
     </Layouts.app>
     """
   end
@@ -106,16 +140,40 @@ defmodule LargeHumourWeb.RatingLive.Form do
     |> assign(:form, to_form(Ratings.change_rating(rating)))
   end
 
-  defp apply_action(socket, :new, _params) do
-    [joke_id | _] = Jokes.list_jokes_asc_rating(1)
-    joke = Jokes.get_joke!(joke_id)
-    rating = %Rating{}
+  defp apply_action(socket, :new, %{
+         "prolific_pid" => prolific_pid
+       }) do
+    create_tasks_for_rater!(prolific_pid)
+    case Tasks.list_unrated_jokes(prolific_pid) do
+      [joke_id | _] ->
+        joke = Jokes.get_joke!(joke_id)
+        rating = %Rating{}
+          socket
+          |> assign(:page_title, "New Joke Rating")
+          |> assign(:joke, joke)
+          |> assign(:rating, rating)
+          |> assign(:rater_id, prolific_pid)
+          |> assign(:form, to_form(Ratings.change_rating(rating)))
 
-    socket
-    |> assign(:page_title, "New Joke Rating")
-    |> assign(:joke, joke)
-    |> assign(:rating, rating)
-    |> assign(:form, to_form(Ratings.change_rating(rating)))
+
+      [] ->
+         socket
+         |> put_flash(:info, "All jokes are now rated!")
+         |> push_navigate(to: ~p"/ratings")
+    end
+  end
+
+  def create_tasks_for_rater!(rater_id) do
+    if Tasks.no_tasks?(rater_id) do
+      Logger.info("Creating tasks for rater: #{rater_id}...")
+      [seed_id | _ ] = Jokes.list_jokes(1, true)
+      ids = Jokes.list_jokes(11,false, seed_id)
+      for j_id <- Enum.shuffle([seed_id | ids]) do
+        Tasks.create_task(%{"rater_id"=> rater_id, "joke_id" => j_id})
+      end
+    else
+            Logger.info("Fetching tasks for rater: #{rater_id}...")
+    end
   end
 
   @impl true
@@ -144,12 +202,14 @@ defmodule LargeHumourWeb.RatingLive.Form do
   end
 
   defp save_rating(socket, :new, rating_params) do
-    case Ratings.create_rating(rating_params) do
+    params = Map.put(rating_params, "rater_id", socket.assigns.rater_id)
+
+    case Ratings.create_rating(params) do
       {:ok, rating} ->
         {:noreply,
          socket
          |> put_flash(:info, "Rating created successfully")
-         |> push_navigate(to: ~p"/ratings/new")}
+         |> push_navigate(to: ~p"/ratings/new?prolific_pid=#{socket.assigns.rater_id}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}

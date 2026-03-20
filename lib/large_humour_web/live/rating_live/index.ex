@@ -23,6 +23,11 @@ defmodule LargeHumourWeb.RatingLive.Index do
       >
         <:col :let={{_id, rating}} label="Joke">{rating.joke_id}</:col>
         <:col :let={{_id, rating}} label="Rating">{rating.rating}</:col>
+        <:col :let={{_id, rating}} label="Rater">{rating.rater_id}</:col>
+        <:col :let={{_id, rating}} label="Aspects">{rating.weird_aspects}</:col>
+        <:col :let={{_id, rating}} label="Offensive?">{rating.offensive}</:col>
+        <:col :let={{_id, rating}} label="Failed?">{rating.failed}</:col>
+
         <:action :let={{_id, rating}}>
           <div class="sr-only">
             <.link navigate={~p"/ratings/#{rating}"}>Show</.link>
