@@ -51,7 +51,7 @@ defmodule LargeHumourWeb.RatingLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app_noauth flash={@flash}>
       <.header>
         How funny for your is this joke?
       </.header>
@@ -116,7 +116,7 @@ defmodule LargeHumourWeb.RatingLive.Form do
         </fieldset>
         <.button phx-disable-with="Saving..." variant="primary">Submit rating</.button>
       </.form>
-    </Layouts.app>
+    </Layouts.app_noauth>
     """
   end
 

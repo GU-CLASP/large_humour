@@ -54,7 +54,6 @@ defmodule LargeHumourWeb.Layouts do
               Generate Jokes
             </.link>
           </li>
-
           <li>
             <.theme_toggle />
           </li>
@@ -62,6 +61,33 @@ defmodule LargeHumourWeb.Layouts do
       </div>
     </header>
 
+    <main class="px-4 py-20 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl space-y-4">
+        {render_slot(@inner_block)}
+      </div>
+    </main>
+
+    <.flash_group flash={@flash} />
+    """
+  end
+
+  @doc """
+  Renders your app layout for non-auth users (now just for joke ratings).
+
+  This function is typically invoked from every template,
+  and it often contains your application menu, sidebar,
+  or similar.
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+
+  attr :current_scope, :map,
+    default: nil,
+    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+
+  slot :inner_block, required: true
+
+  def app_noauth(assigns) do
+    ~H"""
     <main class="px-4 py-20 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
