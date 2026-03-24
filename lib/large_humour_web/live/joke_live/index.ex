@@ -21,8 +21,8 @@ defmodule LargeHumourWeb.JokeLive.Index do
         rows={@streams.jokes}
         row_click={fn {_id, joke} -> JS.navigate(~p"/jokes/#{joke}") end}
       >
-        <:col :let={{_id, joke}} label="Seed">{joke.seed}</:col>
         <:col :let={{_id, joke}} label="Code">{joke.code}</:col>
+        <:col :let={{_id, joke}} label="Source">{joke.source_joke_id}</:col>
         <:col :let={{_id, joke}} label="Text">{joke.text}</:col>
         <:action :let={{_id, joke}}>
           <div class="sr-only">
@@ -60,6 +60,7 @@ defmodule LargeHumourWeb.JokeLive.Index do
   end
 
   defp list_jokes() do
-    Jokes.list_jokes()
+    Jokes.list_jokes() |> Enum.sort_by(& &1.code, :asc) |> Enum.sort_by(& &1.source_joke_id)  
+
   end
 end
