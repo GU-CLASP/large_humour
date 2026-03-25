@@ -53,7 +53,7 @@ defmodule LargeHumourWeb.RatingLive.Form do
     ~H"""
     <Layouts.app_noauth flash={@flash}>
       <.header>
-        How funny for your is this joke?
+        How funny for you is this joke?
       </.header>
 
       <.form for={@form} id="rating-form" phx-change="validate" phx-submit="save">
@@ -162,15 +162,19 @@ defmodule LargeHumourWeb.RatingLive.Form do
         |> assign(:form, to_form(Ratings.change_rating(rating)))
 
       [] ->
-        redirect_link =
-          case prolific_pid do
-            <<"A_", _rest::binary>> -> ~p"/ratings"
-            _ -> Application.fetch_env!(:large_humour, :prolific_redirect_url)
-          end
+        case prolific_pid do
+          <<"A_", _rest::binary>> ->
+            socket
+            |> put_flash(:info, "Thank you! All jokes are now rated!")
+            |> push_navigate(to: ~p"/thanks")
 
-        socket
-        |> put_flash(:info, "Thank you! All jokes are now rated!")
-        |> push_navigate(to: redirect_link)
+          _ ->
+            link = Application.fetch_env!(:large_humour, :prolific_redirect_url)
+
+            socket
+            |> put_flash(:info, "Thank you! All jokes are now rated!")
+            |> redirect(external: link)
+        end
     end
   end
 

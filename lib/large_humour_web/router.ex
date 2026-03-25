@@ -43,6 +43,7 @@ defmodule LargeHumourWeb.Router do
     pipe_through [:browser]
 
     live "/consent", ConsentLive
+    live "/thanks", ThanksLive
     live "/ratings/new", RatingLive.Form, :new
   end
 

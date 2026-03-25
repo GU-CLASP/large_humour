@@ -1,7 +1,6 @@
 defmodule LargeHumourWeb.ConsentLive do
   use LargeHumourWeb, :live_view
   import Ecto.UUID
-  require Logger
 
   @impl true
   def render(assigns) do
