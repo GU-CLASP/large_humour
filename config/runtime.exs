@@ -21,7 +21,12 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :large_humour,
-  req_llms: System.get_env("REQ_LLMS", "groq:openai/gpt-oss-120b") |> String.split(";")
+  req_llms: System.get_env("REQ_LLMS", "groq:openai/gpt-oss-120b") |> String.split(";"),
+  prolific_redirect_url:
+    System.get_env(
+      "PROLIFIC_REDIRECT_URL",
+      "https://app.prolific.com/submissions/complete?cc=C1EGSY4B"
+    )
 
 if config_env() == :prod do
   database_url =

@@ -60,7 +60,6 @@ defmodule LargeHumourWeb.JokeLive.Index do
   end
 
   defp list_jokes() do
-    Jokes.list_jokes() |> Enum.sort_by(& &1.code, :asc) |> Enum.sort_by(& &1.source_joke_id)  
-
+    Jokes.list_jokes() |> Enum.sort_by(& &1.code, :asc) |> Enum.sort_by(& &1.source_joke_id)
   end
 end

@@ -6,7 +6,7 @@ defmodule LargeHumourWeb.RatingLive.Form do
   alias LargeHumour.Ratings.Rating
   alias LargeHumour.Jokes
   alias LargeHumour.Tasks
-  
+
   defp rating_schema do
     [
       %{
@@ -57,7 +57,11 @@ defmodule LargeHumourWeb.RatingLive.Form do
       </.header>
 
       <.form for={@form} id="rating-form" phx-change="validate" phx-submit="save">
-        <div class="card shadow-sm bg-base-200"><div class="card-body"><p>{@joke.text}</p></div></div>
+        <div class="card shadow-sm bg-base-200">
+          <div class="card-body">
+            <p>{@joke.text}</p>
+          </div>
+        </div>
         <.input field={@form[:joke_id]} type="text" label="" value={@joke.id} hidden />
         <div class="w-full">
           <.input
@@ -144,35 +148,43 @@ defmodule LargeHumourWeb.RatingLive.Form do
          "prolific_pid" => prolific_pid
        }) do
     create_tasks_for_rater!(prolific_pid)
+
     case Tasks.list_unrated_jokes(prolific_pid) do
       [joke_id | _] ->
         joke = Jokes.get_joke!(joke_id)
         rating = %Rating{}
-          socket
-          |> assign(:page_title, "New Joke Rating")
-          |> assign(:joke, joke)
-          |> assign(:rating, rating)
-          |> assign(:rater_id, prolific_pid)
-          |> assign(:form, to_form(Ratings.change_rating(rating)))
 
+        socket
+        |> assign(:page_title, "New Joke Rating")
+        |> assign(:joke, joke)
+        |> assign(:rating, rating)
+        |> assign(:rater_id, prolific_pid)
+        |> assign(:form, to_form(Ratings.change_rating(rating)))
 
       [] ->
-         socket
-         |> put_flash(:info, "All jokes are now rated!")
-         |> push_navigate(to: ~p"/ratings")
+        redirect_link =
+          case prolific_pid do
+            <<"A_", _rest::binary>> -> ~p"/ratings"
+            _ -> Application.fetch_env!(:large_humour, :prolific_redirect_url)
+          end
+
+        socket
+        |> put_flash(:info, "Thank you! All jokes are now rated!")
+        |> push_navigate(to: redirect_link)
     end
   end
 
   def create_tasks_for_rater!(rater_id) do
     if Tasks.no_tasks?(rater_id) do
       Logger.info("Creating tasks for rater: #{rater_id}...")
-      [seed_id | _ ] = Jokes.list_jokes(1, true)
-      ids = Jokes.list_jokes(11,false, seed_id)
+      [seed_id | _] = Jokes.list_jokes(1, true)
+      ids = Jokes.list_jokes(11, false, seed_id)
+
       for j_id <- Enum.shuffle([seed_id | ids]) do
-        Tasks.create_task(%{"rater_id"=> rater_id, "joke_id" => j_id})
+        Tasks.create_task(%{"rater_id" => rater_id, "joke_id" => j_id})
       end
     else
-            Logger.info("Fetching tasks for rater: #{rater_id}...")
+      Logger.info("Fetching tasks for rater: #{rater_id}...")
     end
   end
 
@@ -208,7 +220,7 @@ defmodule LargeHumourWeb.RatingLive.Form do
       {:ok, rating} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Rating created successfully")
+         |> put_flash(:info, "Rating submitted successfully")
          |> push_navigate(to: ~p"/ratings/new?prolific_pid=#{socket.assigns.rater_id}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->

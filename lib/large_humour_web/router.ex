@@ -42,6 +42,7 @@ defmodule LargeHumourWeb.Router do
   scope "/", LargeHumourWeb do
     pipe_through [:browser]
 
+    live "/consent", ConsentLive
     live "/ratings/new", RatingLive.Form, :new
   end
 
