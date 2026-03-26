@@ -30,7 +30,7 @@ defmodule LargeHumour.Tasks do
     query =
       from t in Task,
         left_join: r in Rating,
-        on: t.joke_id == r.joke_id,
+        on: t.joke_id == r.joke_id and t.rater_id == r.rater_id,
         select: t.joke_id,
         where: t.rater_id == ^rater_id,
         where: is_nil(r.rater_id)
