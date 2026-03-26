@@ -15,7 +15,7 @@ defmodule LargeHumourWeb.ConsentLive do
 
     ~H"""
     <Layouts.app_noauth flash={@flash}>
-      <section class="m-5 p-5 rounded-md bg-slate-100 h-full" id="consent_form">
+      <section class="m-5 p-5 rounded-md bg-base-200 h-full" id="consent_form">
         <h1 class="text-2xl font-semibold mb-5" id="instructions">
           Consent form
         </h1>
@@ -45,7 +45,7 @@ defmodule LargeHumourWeb.ConsentLive do
           >
             Yes, I consent.
           </.button>
-          <p class="mt-3 pl-4 text-sm font-semibold text-red-600">
+          <p class="mt-3 pl-4 text-sm font-semibold text-error">
             {no_consent}
           </p>
         </article>
