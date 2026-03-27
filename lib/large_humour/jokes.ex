@@ -45,15 +45,19 @@ defmodule LargeHumour.Jokes do
         as: :joke,
         left_join: r in Rating,
         on: j.id == r.joke_id,
-        left_join: t in Task,
-        on: j.id == t.joke_id,
         group_by: [j.id],
-        select: {j.id, count(r.rating)},
-        distinct: j.source_joke_id,
+        select: {j.id, count(r.id)},
         where: ^where1,
         # where: ^where2,
-        order_by: [count(t.joke_id), count(r.rating)],
+        order_by: [count(r.id)],
         limit: ^limit
+
+    query =
+      if seeds do
+        query
+      else
+        distinct(query, [j], j.source_joke_id)
+      end
 
     Repo.all(query)
   end
