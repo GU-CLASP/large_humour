@@ -184,7 +184,6 @@ defmodule LargeHumourWeb.RatingLive.Form do
 
       [seed_id | _] =
         Jokes.list_jokes(111_111, true)
-        |> Enum.filter(fn {_, n} -> n < max_ratings end)
         |> Enum.map(fn {id, _} -> id end)
 
       ids =
