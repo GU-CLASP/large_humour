@@ -147,7 +147,7 @@ defmodule LargeHumourWeb.RatingLive.Form do
   defp apply_action(socket, :new, %{
          "prolific_pid" => prolific_pid
        }) do
-    create_tasks_for_rater!(prolific_pid)
+    create_tasks_for_rater!(prolific_pid, 10)
 
     case Tasks.list_unrated_jokes(prolific_pid) do
       [joke_id | _] ->
@@ -178,11 +178,20 @@ defmodule LargeHumourWeb.RatingLive.Form do
     end
   end
 
-  def create_tasks_for_rater!(rater_id) do
+  def create_tasks_for_rater!(rater_id, max_ratings) do
     if Tasks.no_tasks?(rater_id) do
       Logger.info("Creating tasks for rater: #{rater_id}...")
-      [seed_id | _] = Jokes.list_jokes(1, true)
-      ids = Jokes.list_jokes(11, false, seed_id)
+
+      [seed_id | _] =
+        Jokes.list_jokes(111_111, true)
+        |> Enum.filter(fn {_, n} -> n < max_ratings end)
+        |> Enum.map(fn {id, _} -> id end)
+
+      ids =
+        Jokes.list_jokes(111_111, false, seed_id)
+        |> Enum.filter(fn {_, n} -> n < max_ratings end)
+        |> Enum.map(fn {id, _} -> id end)
+        |> Enum.slice(0..10)
 
       for j_id <- Enum.shuffle([seed_id | ids]) do
         Tasks.create_task(%{"rater_id" => rater_id, "joke_id" => j_id})

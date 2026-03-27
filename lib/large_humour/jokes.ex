@@ -48,7 +48,7 @@ defmodule LargeHumour.Jokes do
         left_join: t in Task,
         on: j.id == t.joke_id,
         group_by: [j.id],
-        select: j.id,
+        select: {j.id, count(r.rating)},
         distinct: j.source_joke_id,
         where: ^where1,
         # where: ^where2,
